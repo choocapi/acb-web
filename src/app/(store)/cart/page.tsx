@@ -2,24 +2,32 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useCart } from "@/lib/cart-context";
+import {
+  clearCart,
+  removeFromCart,
+  selectTotalPrice,
+  updateQuantity,
+} from "@/lib/features/cart/cartSlice";
+import { useAppDispatch, useAppSelector } from "@/lib/hook";
 import { formatPrice } from "@/lib/utils";
 import { ArrowRight, Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/router";
 import { toast } from "sonner";
 
 export default function CartPage() {
-  const { items, removeFromCart, updateQuantity, totalPrice, clearCart } =
-    useCart();
+  const dispatch = useAppDispatch();
+  const items = useAppSelector((state) => state.cart.items);
+  const totalPrice = useAppSelector(selectTotalPrice);
 
   const handleRemoveItem = (id: string, title: string) => {
-    removeFromCart(id);
+    dispatch(removeFromCart({ productId: id }));
     toast.success(`${title} đã được xóa khỏi giỏ hàng`);
   };
 
   const handleClearCart = () => {
-    clearCart();
+    dispatch(clearCart());
     toast.success("Giỏ hàng đã được xóa");
   };
 
@@ -92,7 +100,12 @@ export default function CartPage() {
                         size="icon"
                         className="h-8 w-8"
                         onClick={() =>
-                          updateQuantity(item.id!, item.quantity - 1)
+                          dispatch(
+                            updateQuantity({
+                              productId: item.id!,
+                              quantity: item.quantity - 1,
+                            })
+                          )
                         }
                         disabled={item.quantity <= 1}
                       >
@@ -106,7 +119,12 @@ export default function CartPage() {
                         size="icon"
                         className="h-8 w-8"
                         onClick={() =>
-                          updateQuantity(item.id!, item.quantity + 1)
+                          dispatch(
+                            updateQuantity({
+                              productId: item.id!,
+                              quantity: item.quantity + 1,
+                            })
+                          )
                         }
                       >
                         <Plus className="h-3 w-3" />
@@ -147,7 +165,12 @@ export default function CartPage() {
                         variant="outline"
                         size="icon"
                         onClick={() =>
-                          updateQuantity(item.id!, item.quantity - 1)
+                          dispatch(
+                            updateQuantity({
+                              productId: item.id!,
+                              quantity: item.quantity - 1,
+                            })
+                          )
                         }
                         disabled={item.quantity <= 1}
                       >
@@ -160,7 +183,12 @@ export default function CartPage() {
                         variant="outline"
                         size="icon"
                         onClick={() =>
-                          updateQuantity(item.id!, item.quantity + 1)
+                          dispatch(
+                            updateQuantity({
+                              productId: item.id!,
+                              quantity: item.quantity + 1,
+                            })
+                          )
                         }
                       >
                         <Plus className="h-4 w-4" />
@@ -240,7 +268,11 @@ export default function CartPage() {
 
               <div className="space-y-3">
                 <Link href="/checkout">
-                  <Button className="w-full" size="lg">
+                  <Button
+                    className="w-full"
+                    size="lg"
+                    disabled={items.length === 0}
+                  >
                     Tiếp tục thanh toán
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>

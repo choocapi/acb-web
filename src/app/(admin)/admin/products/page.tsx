@@ -11,22 +11,27 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useProduct } from "@/lib/product-context";
+import { getCategories } from "@/lib/features/category/categoryThunks";
+import {
+  deleteProduct,
+  getProducts,
+} from "@/lib/features/product/productThunks";
+import { useAppDispatch, useAppSelector } from "@/lib/hook";
 import { formatPrice } from "@/lib/utils";
 import { Edit, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 export default function AdminProductsPage() {
-  const { products, getProducts, deleteProduct, categories, getCategories } =
-    useProduct();
-  const [loading, setLoading] = useState(true);
+  const dispatch = useAppDispatch();
+  const products = useAppSelector((state) => state.product.products);
+  const categories = useAppSelector((state) => state.category.categories);
+  const loading = useAppSelector((state) => state.product.loading);
 
   useEffect(() => {
-    getProducts();
-    getCategories();
-    setLoading(false);
+    dispatch(getProducts({ isActive: false }));
+    dispatch(getCategories());
   }, []);
 
   if (loading) {
@@ -116,7 +121,9 @@ export default function AdminProductsPage() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => deleteProduct(product.id!)}
+                          onClick={() =>
+                            dispatch(deleteProduct({ productId: product.id! }))
+                          }
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>

@@ -2,14 +2,17 @@
 
 import Navbar from "@/components/navbar";
 import ProductCard from "@/components/product-card";
-import { useProduct } from "@/lib/product-context";
+import FooterSection from "@/components/sections/footer/default";
+import { getProducts } from "@/lib/features/product/productThunks";
+import { useAppDispatch, useAppSelector } from "@/lib/hook";
 import { useEffect } from "react";
 
 export default function Home() {
-  const { products, getProducts } = useProduct();
+  const dispatch = useAppDispatch();
+  const products = useAppSelector((state) => state.product.products);
 
   useEffect(() => {
-    getProducts();
+    dispatch(getProducts({ isActive: true }));
   }, []);
 
   return (
@@ -48,6 +51,7 @@ export default function Home() {
           </div>
         </section>
       </main>
+      <FooterSection />
     </div>
   );
 }

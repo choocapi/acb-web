@@ -5,16 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
-import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useAppDispatch } from "@/lib/hook";
+import { login, loginWithGoogle } from "@/lib/features/auth/authThunks";
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
   const router = useRouter();
-  const { login } = useAuth();
+  const dispatch = useAppDispatch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -23,7 +24,17 @@ export function LoginForm({
       toast.error("Vui lòng điền đầy đủ các trường");
       return;
     }
-    const res = await login(email, password);
+    const res = await dispatch(login({ email, password })).unwrap();
+    if (res.success) {
+      toast.success(res.message);
+      router.push("/");
+    } else {
+      toast.error(res.message);
+    }
+  };
+
+  const handleLoginWithGoogle = async () => {
+    const res = await dispatch(loginWithGoogle()).unwrap();
     if (res.success) {
       toast.success(res.message);
       router.push("/");
@@ -85,7 +96,11 @@ export function LoginForm({
             Hoặc tiếp tục với
           </span>
         </div>
-        <Button variant="outline" className="w-full">
+        <Button
+          variant="outline"
+          className="w-full"
+          onClick={handleLoginWithGoogle}
+        >
           Đăng nhập bằng Google
         </Button>
       </div>

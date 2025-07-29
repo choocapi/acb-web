@@ -1,23 +1,58 @@
 "use client";
 
+import Rating from "@/components/rating";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useCart } from "@/lib/cart-context";
-import { useProduct } from "@/lib/product-context";
+import { addToCart } from "@/lib/features/cart/cartSlice";
+import { useAppDispatch, useAppSelector } from "@/lib/hook";
 import { formatPrice } from "@/lib/utils";
 import { Product } from "@/types/product";
-import { ArrowLeft, Minus, Plus, ShoppingCart } from "lucide-react";
+import { ArrowLeft, Minus, Plus, ShoppingCart, StarIcon } from "lucide-react";
 import Image from "next/image";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+const mockFeedbacks = [
+  {
+    id: "1",
+    productId: "UPB5fcmm24pKqt6KqhUt",
+    fullName: "Choocapi",
+    rating: 5,
+    content: "Sản phẩm rất tốt, đúng với mô tả, chất lượng tốt",
+    createdAt: new Date("2025-07-29T00:00:00.000Z"),
+    updatedAt: new Date("2025-07-29T00:00:00.000Z"),
+  },
+  {
+    id: "2",
+    productId: "UPB5fcmm24pKqt6KqhUt",
+    fullName: "Chau Minh Duong",
+    rating: 4,
+    content: "Cũng tạm tạm",
+    createdAt: new Date("2025-07-26T00:00:00.000Z"),
+    updatedAt: new Date("2025-07-26T00:00:00.000Z"),
+  },
+  {
+    id: "3",
+    productId: "mOQVuH5Y8aXzdjh7vptl",
+    fullName: "Nguyen Van A",
+    rating: 4,
+    content: "Tạm tạm",
+    createdAt: new Date("2025-07-25T00:00:00.000Z"),
+    updatedAt: new Date("2025-07-26T00:00:00.000Z"),
+  },
+];
+
 export default function ProductDetailsPage() {
   const params = useParams();
   const router = useRouter();
-  const { addToCart } = useCart();
-  const { categories, getCategories, products } = useProduct();
+  const dispatch = useAppDispatch();
+  const categories = useAppSelector((state) => state.category.categories);
+  const products = useAppSelector((state) => state.product.products);
+  const feedbacks = mockFeedbacks.filter(
+    (feedback) => feedback.productId === params.id
+  );
 
   const [product, setProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
@@ -33,7 +68,7 @@ export default function ProductDetailsPage() {
 
   const handleAddToCart = () => {
     if (product) {
-      addToCart(product, quantity);
+      dispatch(addToCart({ product, quantity }));
       toast.success(
         `${quantity} × ${product.title} đã được thêm vào giỏ hàng!`
       );
@@ -167,6 +202,40 @@ export default function ProductDetailsPage() {
               </div>
             </CardContent>
           </Card>
+
+          {/* Feedback */}
+          <div className="gap-8 border-t pt-8">
+            <h2 className="mb-4 text-2xl font-bold">Đánh giá sản phẩm</h2>
+            <div className="space-y-4 rounded-lg border p-4">
+              {feedbacks.length > 0 ? (
+                feedbacks.map((feedback) => (
+                  <div
+                    key={feedback.id}
+                    className="border-b pb-4 last:border-b-0 last:pb-0"
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-lg font-semibold">
+                          {feedback.fullName}
+                        </h3>
+                        <Rating rating={feedback.rating} />
+                      </div>
+                      <p className="text-muted-foreground text-sm">
+                        {feedback.createdAt.toLocaleDateString()}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <p className="text-muted-foreground">
+                        {feedback.content}
+                      </p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-muted-foreground">Chưa có đánh giá nào</p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </div>

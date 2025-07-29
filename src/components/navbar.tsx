@@ -11,8 +11,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/lib/auth-context";
-import { useCart } from "@/lib/cart-context";
+import { logout } from "@/lib/features/auth/authThunks";
+import { selectTotalItems } from "@/lib/features/cart/cartSlice";
+import { useAppDispatch, useAppSelector } from "@/lib/hook";
 import {
   CreditCard,
   Heart,
@@ -30,11 +31,14 @@ import { toast } from "sonner";
 
 export default function Navbar() {
   const router = useRouter();
-  const { isAdmin, isUser, logout, user } = useAuth();
-  const { totalItems } = useCart();
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.auth.user);
+  const isAdmin = user?.role === "admin";
+  const isUser = user?.role === "user";
+  const totalItems = useAppSelector(selectTotalItems);
 
   const handleLogout = async () => {
-    const response = await logout();
+    const response = await dispatch(logout()).unwrap();
     if (response.success) {
       toast.success("Đăng xuất thành công");
       router.push("/login");

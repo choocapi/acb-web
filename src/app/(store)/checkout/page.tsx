@@ -18,10 +18,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useCart } from "@/lib/cart-context";
-import { formatPrice } from "@/lib/utils";
+import { selectTotalPrice } from "@/lib/features/cart/cartSlice";
+import { addOrder, updateOrderStatus } from "@/lib/features/order/orderThunks";
+import { useAppDispatch, useAppSelector } from "@/lib/hook";
+import { formatPrice, genTrackingNumber } from "@/lib/utils";
+import { AddressDelivery, Order } from "@/types/orders";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { CreditCard, Lock, Truck } from "lucide-react";
+import { CreditCard, Truck } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
@@ -37,21 +40,16 @@ const checkoutFormSchema = z.object({
   address: z.string().min(5, "Địa chỉ phải có ít nhất 5 ký tự"),
   district: z.string().min(2, "Quận/Huyện phải có ít nhất 2 ký tự"),
   province_city: z.string().min(2, "Tỉnh/Thành phố phải có ít nhất 2 ký tự"),
-  // zipCode: z.string().min(5, "ZIP code must be at least 5 characters"),
-  // country: z.string().min(2, "Country is required"),
-
-  // Payment Information
-  cardNumber: z.string().min(16, "Số thẻ phải có 16 chữ số"),
-  expiryDate: z.string().regex(/^\d{2}\/\d{2}$/, "Ngày hết hạn phải là MM/YY"),
-  cvv: z.string().min(3, "CVV phải có 3 chữ số"),
-  cardholderName: z.string().min(2, "Tên chủ thẻ phải có ít nhất 2 ký tự"),
 });
 
 type CheckoutFormValues = z.infer<typeof checkoutFormSchema>;
 
 export default function CheckoutPage() {
-  const { items, totalPrice, clearCart } = useCart();
   const router = useRouter();
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.auth.user);
+  const items = useAppSelector((state) => state.cart.items);
+  const totalPrice = useAppSelector(selectTotalPrice);
 
   const form = useForm<CheckoutFormValues>({
     resolver: zodResolver(checkoutFormSchema),
@@ -63,34 +61,42 @@ export default function CheckoutPage() {
       address: "",
       district: "",
       province_city: "",
-      // zipCode: "",
-      // country: "US",
-      cardNumber: "",
-      expiryDate: "",
-      cvv: "",
-      cardholderName: "",
     },
   });
 
-  const onSubmit = async (values: CheckoutFormValues) => {
-    console.log("Form values:", values);
+  const handleCheckout = async (values: CheckoutFormValues) => {
+    const addressDelivery: AddressDelivery = {
+      firstName: values.firstName,
+      lastName: values.lastName,
+      email: values.email,
+      phone: values.phone,
+      address: values.address,
+      district: values.district,
+      province_city: values.province_city,
+    };
+    const order: Order = {
+      userId: user?.uid!,
+      total: totalPrice,
+      status: "processing",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      estimatedDelivery: new Date(
+        new Date().getTime() + 7 * 24 * 60 * 60 * 1000
+      ), // 7 ngày
+      trackingNumber: genTrackingNumber(),
+      items: items,
+      addressDelivery: addressDelivery,
+    };
     try {
-      // Simulate API call
-      toast.loading("Đang xử lý đơn hàng...");
-
-      // Simulate processing time
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Clear the cart
-      clearCart();
-
-      toast.success("Đơn hàng đã được đặt thành công!");
-
-      // Redirect to success page
-      router.push("/checkout/success");
-    } catch (error) {
-      console.error("Checkout error:", error);
-      toast.error("Lỗi khi xử lý đơn hàng. Vui lòng thử lại.");
+      const res = await dispatch(addOrder({ order })).unwrap();
+      if (res.success) {
+        toast.success(res.message);
+        router.push(`/checkout/success?orderId=${res.data.id}`);
+      } else {
+        toast.error(res.message);
+      }
+    } catch (error: any) {
+      toast.error("Đã có lỗi xảy ra, vui lòng thử lại");
     }
   };
 
@@ -118,7 +124,7 @@ export default function CheckoutPage() {
 
       <Form {...form}>
         <form
-          onSubmit={form.handleSubmit(onSubmit)}
+          onSubmit={form.handleSubmit(handleCheckout)}
           className="grid grid-cols-1 gap-8 lg:grid-cols-3"
         >
           {/* Checkout Form */}
@@ -299,79 +305,6 @@ export default function CheckoutPage() {
                     </FormItem>
                   )}
                 /> */}
-              </CardContent>
-            </Card>
-
-            {/* Payment Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="h-5 w-5" />
-                  Thông tin thanh toán
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="cardholderName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Tên chủ thẻ</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Nguyễn Văn A" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="cardNumber"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Số thẻ</FormLabel>
-                      <FormControl>
-                        <Input placeholder="1234 5678 9012 3456" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-                  <FormField
-                    control={form.control}
-                    name="expiryDate"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Ngày hết hạn</FormLabel>
-                        <FormControl>
-                          <Input placeholder="MM/YY" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <FormField
-                    control={form.control}
-                    name="cvv"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>CVV</FormLabel>
-                        <FormControl>
-                          <Input placeholder="123" {...field} />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
-
-                <div className="text-muted-foreground flex items-center gap-2 text-sm">
-                  <Lock className="h-4 w-4" />
-                  Thông tin thanh toán của bạn được bảo mật và được mã hóa
-                </div>
               </CardContent>
             </Card>
           </div>

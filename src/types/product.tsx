@@ -12,7 +12,7 @@ export interface Product {
   isActive: boolean;
 }
 
-export interface ProductCategory {
+export interface Category {
   id?: string;
   name: string;
   description: string;
@@ -20,10 +20,24 @@ export interface ProductCategory {
   updatedAt: Date;
 }
 
-export interface ProductBrand {
+export interface Brand {
   id?: string;
   name: string;
   description: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface CartItem extends Product {
+  quantity: number;
+}
+
+export interface Feedback {
+  id?: string;
+  productId: string;
+  userId: string;
+  rating: number;
+  content: string;
   createdAt: Date;
   updatedAt: Date;
 }

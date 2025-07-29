@@ -2,9 +2,10 @@
 
 import ModeToggle from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/lib/auth-context";
+import { logout } from "@/lib/features/auth/authThunks";
+import { useAppDispatch } from "@/lib/hook";
 import { cn } from "@/lib/utils";
-import { Home, LogOut, Package, Plus } from "lucide-react";
+import { Home, LogOut, Package, Plus, ShoppingCart } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -20,15 +21,15 @@ const sidebarItems = [
     icon: Package,
   },
   {
-    title: "Thêm sản phẩm",
-    href: "/admin/add-product",
-    icon: Plus,
+    title: "Đơn hàng",
+    href: "/admin/orders",
+    icon: ShoppingCart,
   },
 ];
 
 export default function AdminSidebar() {
   const pathname = usePathname();
-  const { logout } = useAuth();
+  const dispatch = useAppDispatch();
 
   return (
     <div className="bg-background flex h-full w-64 flex-col border-r">
@@ -72,7 +73,7 @@ export default function AdminSidebar() {
           variant="ghost"
           className="w-full justify-start"
           size="sm"
-          onClick={logout}
+          onClick={() => dispatch(logout())}
         >
           <LogOut className="mr-2 h-4 w-4" />
           Đăng xuất

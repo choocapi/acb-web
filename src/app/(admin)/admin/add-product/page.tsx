@@ -20,11 +20,17 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { SheetDemo } from "@/components/sheet";
 import { Label } from "@/components/ui/label";
-import { useProduct } from "@/lib/product-context";
 import { uploadImage } from "@/services/imageService";
-import { Product, ProductBrand, ProductCategory } from "@/types/product";
+import { Product, Brand, Category } from "@/types/product";
 import { ComboBox } from "@/components/combo-box";
 import { toast } from "sonner";
+import { useAppDispatch, useAppSelector } from "@/lib/hook";
+import {
+  addCategory,
+  getCategories,
+} from "@/lib/features/category/categoryThunks";
+import { addBrand, getBrands } from "@/lib/features/brand/brandThunks";
+import { addProduct } from "@/lib/features/product/productThunks";
 
 const productSchema = z.object({
   title: z.string().min(1, "Tên sản phẩm là bắt buộc"),
@@ -40,26 +46,21 @@ type ProductFormData = z.infer<typeof productSchema>;
 
 export default function AddProductPage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [categoryName, setCategoryName] = useState("");
   const [categoryDescription, setCategoryDescription] = useState("");
   const [brandName, setBrandName] = useState("");
   const [brandDescription, setBrandDescription] = useState("");
-  const {
-    addProduct,
-    categories,
-    getCategories,
-    brands,
-    getBrands,
-    addCategory,
-    addBrand,
-  } = useProduct();
+
+  const dispatch = useAppDispatch();
+  const categories = useAppSelector((state) => state.category.categories);
+  const brands = useAppSelector((state) => state.brand.brands);
+  const loading = useAppSelector((state) => state.product.loading);
 
   useEffect(() => {
-    getCategories();
-    getBrands();
+    dispatch(getCategories());
+    dispatch(getBrands());
   }, []);
 
   const form = useForm<ProductFormData>({
@@ -87,7 +88,6 @@ export default function AddProductPage() {
   };
 
   const onAddProduct = async (data: ProductFormData) => {
-    setLoading(true);
     try {
       const imageUrl = await uploadImage(imageFile!, "products");
       const product: Product = {
@@ -97,49 +97,46 @@ export default function AddProductPage() {
         updatedAt: new Date(),
         isActive: true,
       };
-      const response = await addProduct(product);
+      const response = await dispatch(addProduct({ product })).unwrap();
 
       if (response.success) {
+        toast.success(response.message);
         router.push("/admin/products");
       } else {
-        toast.error("Thêm sản phẩm thất bại");
+        toast.error(response.message);
       }
     } catch (error) {
-      toast.error("Lỗi thêm sản phẩm");
-    } finally {
-      setLoading(false);
+      toast.error("Lỗi thêm sản phẩm, vui lòng thử lại");
     }
   };
 
   const onAddCategory = async () => {
-    const data: ProductCategory = {
+    const data: Category = {
       name: categoryName,
       description: categoryDescription,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-    const response = await addCategory(data);
+    const response = await dispatch(addCategory({ category: data })).unwrap();
     if (response.success) {
-      getCategories();
-      toast.success("Thêm danh mục thành công");
+      toast.success(response.message);
     } else {
-      toast.error("Thêm danh mục thất bại");
+      toast.error(response.message);
     }
   };
 
   const onAddBrand = async () => {
-    const data: ProductBrand = {
+    const data: Brand = {
       name: brandName,
       description: brandDescription,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-    const response = await addBrand(data);
+    const response = await dispatch(addBrand({ brand: data })).unwrap();
     if (response.success) {
-      getBrands();
-      toast.success("Thêm thương hiệu thành công");
+      toast.success(response.message);
     } else {
-      toast.error("Thêm thương hiệu thất bại");
+      toast.error(response.message);
     }
   };
 

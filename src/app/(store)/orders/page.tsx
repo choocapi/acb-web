@@ -3,117 +3,31 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  getStatusColor,
+  getStatusIcon,
+  getStatusText,
+} from "@/constants/status";
+import { useAppDispatch, useAppSelector } from "@/lib/hook";
 import { formatPrice } from "@/lib/utils";
-import { ArrowLeft, CheckCircle, Clock, Package, Truck } from "lucide-react";
+import { ArrowLeft, Package } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
-// Mock order data - in a real app, this would come from an API
-const mockOrders = [
-  {
-    id: "ORD-001",
-    date: "2025-01-05",
-    status: "delivered",
-    total: 2000000,
-    items: [
-      {
-        id: 1,
-        title: "Tai nghe Premium Wireless",
-        price: 2000000,
-        quantity: 1,
-        image:
-          "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop",
-      },
-    ],
-    trackingNumber: "TRK123456789",
-    estimatedDelivery: "2025-01-03",
-  },
-  {
-    id: "ORD-002",
-    date: "2025-01-07",
-    status: "shipped",
-    total: 1000000,
-    items: [
-      {
-        id: 2,
-        title: "Ghế văn phòng Ergonomic",
-        price: 1000000,
-        quantity: 1,
-        image:
-          "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=500&h=500&fit=crop",
-      },
-    ],
-    trackingNumber: "TRK987654321",
-    estimatedDelivery: "2025-01-10",
-  },
-  {
-    id: "ORD-003",
-    date: "2025-01-09",
-    status: "processing",
-    total: 1900000,
-    items: [
-      {
-        id: 3,
-        title: "Ốp điện thoại",
-        price: 1800000,
-        quantity: 1,
-        image:
-          "https://images.unsplash.com/photo-1601972602288-f64ba92cbc35?w=500&h=500&fit=crop",
-      },
-      {
-        id: 4,
-        title: "Kính cường lực",
-        price: 100000,
-        quantity: 1,
-        image:
-          "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=500&h=500&fit=crop",
-      },
-    ],
-    trackingNumber: null,
-    estimatedDelivery: "2025-01-15",
-  },
-];
-
-const getStatusIcon = (status: string) => {
-  switch (status) {
-    case "processing":
-      return <Clock className="h-4 w-4" />;
-    case "shipped":
-      return <Truck className="h-4 w-4" />;
-    case "delivered":
-      return <CheckCircle className="h-4 w-4" />;
-    default:
-      return <Package className="h-4 w-4" />;
-  }
-};
-
-const getStatusText = (status: string) => {
-  switch (status) {
-    case "processing":
-      return "Đang xử lý";
-    case "shipped":
-      return "Đang giao";
-    case "delivered":
-      return "Đã giao";
-    default:
-      return "Đang xử lý";
-  }
-};
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "processing":
-      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
-    case "shipped":
-      return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300";
-    case "delivered":
-      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
-    default:
-      return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
-  }
-};
-
 export default function OrdersPage() {
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.auth.user);
+  const orders = useAppSelector((state) => state.order.orders);
+  const loading = useAppSelector((state) => state.order.loading);
+
+  if (loading) {
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="text-muted-foreground">Đang tải đơn hàng...</div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
@@ -131,7 +45,7 @@ export default function OrdersPage() {
         </div>
       </div>
 
-      {mockOrders.length === 0 ? (
+      {orders.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-16">
             <Package className="text-muted-foreground mb-4 h-16 w-16" />
@@ -147,7 +61,7 @@ export default function OrdersPage() {
         </Card>
       ) : (
         <div className="space-y-6">
-          {mockOrders.map((order) => (
+          {orders.map((order) => (
             <Card key={order.id}>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -156,7 +70,7 @@ export default function OrdersPage() {
                       Đơn hàng {order.id}
                     </CardTitle>
                     <p className="text-muted-foreground text-sm">
-                      Đặt vào {new Date(order.date).toLocaleDateString()}
+                      Đặt vào {new Date(order.createdAt).toLocaleDateString()}
                     </p>
                   </div>
                   <div className="text-right">

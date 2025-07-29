@@ -2,19 +2,20 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useProduct } from "@/lib/product-context";
+import { getProducts } from "@/lib/features/product/productThunks";
+import { useAppDispatch, useAppSelector } from "@/lib/hook";
 import { formatPrice } from "@/lib/utils";
-import { Package, Plus, TrendingUp, Users } from "lucide-react";
+import { Package, Plus, ShoppingCart, TrendingUp, Users } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 export default function AdminDashboard() {
-  const { products, getProducts } = useProduct();
-  const [loading, setLoading] = useState(true);
+  const dispatch = useAppDispatch();
+  const products = useAppSelector((state) => state.product.products);
+  const loading = useAppSelector((state) => state.product.loading);
 
   useEffect(() => {
-    getProducts();
-    setLoading(false);
+    dispatch(getProducts({ isActive: false }));
   }, []);
 
   const totalProducts = products.length;
@@ -108,6 +109,12 @@ export default function AdminDashboard() {
               <Button variant="outline" className="w-full justify-start">
                 <Package className="mr-2 h-4 w-4" />
                 Xem tất cả sản phẩm
+              </Button>
+            </Link>
+            <Link href="/admin/orders">
+              <Button variant="outline" className="w-full justify-start">
+                <ShoppingCart className="mr-2 h-4 w-4" />
+                Xem tất cả đơn hàng
               </Button>
             </Link>
           </CardContent>

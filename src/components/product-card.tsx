@@ -2,8 +2,9 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/lib/cart-context";
-import { useProduct } from "@/lib/product-context";
+import { addToCart } from "@/lib/features/cart/cartSlice";
+import { getCategories } from "@/lib/features/category/categoryThunks";
+import { useAppDispatch, useAppSelector } from "@/lib/hook";
 import { formatPrice } from "@/lib/utils";
 import { Product } from "@/types/product";
 import { ShoppingCart } from "lucide-react";
@@ -17,16 +18,16 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product }: ProductCardProps) {
-  const { addToCart } = useCart();
-  const { categories, getCategories } = useProduct();
+  const dispatch = useAppDispatch();
+  const categories = useAppSelector((state) => state.category.categories);
 
   const handleAddToCart = () => {
-    addToCart(product);
+    dispatch(addToCart({ product, quantity: 1 }));
     toast.success(`${product.title} đã được thêm vào giỏ hàng!`);
   };
 
   useEffect(() => {
-    getCategories();
+    dispatch(getCategories());
   }, []);
 
   return (

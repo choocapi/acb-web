@@ -1,11 +1,15 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAppSelector } from "@/lib/hook";
 import { CheckCircle, Home, Package } from "lucide-react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 
 export default function CheckoutSuccessPage() {
-  // Generate a random order number for demo
-  const orderNumber = `ORD-${Date.now().toString().slice(-6)}`;
+  const searchParams = useSearchParams();
+  const orderId = searchParams.get("orderId");
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -31,7 +35,7 @@ export default function CheckoutSuccessPage() {
           <CardContent className="space-y-4">
             <div className="bg-muted rounded-lg p-4">
               <p className="mb-1 text-sm font-medium">Số đơn hàng</p>
-              <p className="text-2xl font-bold">{orderNumber}</p>
+              <p className="text-2xl font-bold">{orderId}</p>
             </div>
 
             <div className="grid grid-cols-1 gap-4 text-sm md:grid-cols-2">

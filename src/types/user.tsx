@@ -1,14 +1,18 @@
 export interface User {
-  uid?: string;
-  fullName?: string;
-  email?: string;
-  phone?: string;
+  uid: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  address?: string;
+  district?: string;
+  province_city?: string;
   avatar?: string;
-  role?: "admin" | "user";
-  createdAt?: Date;
-  updatedAt?: Date;
-  isActive?: boolean;
-  isDeleted?: boolean;
+  bio?: string;
+  role: "admin" | "user";
+  createdAt: Date;
+  updatedAt: Date;
+  isActive: boolean;
+  isDeleted: boolean;
 }
 
 export interface AddressDelivery {

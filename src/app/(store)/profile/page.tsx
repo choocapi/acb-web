@@ -12,8 +12,9 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-
-import { useAuth } from "@/lib/auth-context";
+import { updateUser } from "@/lib/features/auth/authThunks";
+import { useAppDispatch, useAppSelector } from "@/lib/hook";
+import { formatPrice } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Calendar, Mail, MapPin, Phone, User } from "lucide-react";
 import Link from "next/link";
@@ -36,35 +37,41 @@ const profileFormSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 export default function ProfilePage() {
-  const { isAdmin } = useAuth();
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.auth.user);
+  const orders = useAppSelector((state) => state.order.orders);
+  const isAdmin = user?.role === "admin";
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      firstName: isAdmin ? "Admin" : "Nguyễn",
-      lastName: isAdmin ? "User" : "Văn A",
-      email: isAdmin ? "admin@ecomstore.com" : "nguyenvan@example.com",
-      phone: "09xxxxxxxx",
-      address: "123 Đường Cách Mạng Tháng 8",
-      district: "Bình Thạnh",
-      province_city: "TP.HCM",
-      // zipCode: "10001",
-      bio: isAdmin ? "Quản trị viên" : "Là khách hàng từ 2024",
+      firstName: user?.fullName.split(" ")[0] || "",
+      lastName: user?.fullName.split(" ").slice(1).join(" ") || "",
+      email: user?.email || "",
+      phone: user?.phone || "",
+      address: user?.address || "",
+      district: user?.district || "",
+      province_city: user?.province_city || "",
+      bio: user?.bio || "",
     },
   });
 
   const onSubmit = async (values: ProfileFormValues) => {
+    const { firstName, lastName, ...rest } = values;
+    const fullName = `${firstName} ${lastName}`;
+    const updatedUser = {
+      ...rest,
+      fullName,
+      uid: user?.uid,
+    };
     try {
-      // Simulate API call
-      toast.loading("Đang cập nhật thông tin...");
-
-      // Simulate processing time
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      console.log("Profile updated:", values);
-      toast.success("Cập nhật thông tin thành công!");
+      const res = await dispatch(updateUser({ user: updatedUser })).unwrap();
+      if (res.success) {
+        toast.success(res.message);
+      } else {
+        toast.error(res.message);
+      }
     } catch (error) {
-      console.error("Profile update error:", error);
       toast.error("Cập nhật thông tin thất bại. Vui lòng thử lại.");
     }
   };
@@ -119,12 +126,16 @@ export default function ProfilePage() {
                 <div className="flex items-center gap-3 text-sm">
                   <MapPin className="text-muted-foreground h-4 w-4" />
                   <span>
-                    {form.watch("district")}, {form.watch("province_city")}
+                    {form.watch("address")}, {form.watch("district")},{" "}
+                    {form.watch("province_city")}
                   </span>
                 </div>
                 <div className="flex items-center gap-3 text-sm">
                   <Calendar className="text-muted-foreground h-4 w-4" />
-                  <span>Thành viên từ tháng 1 năm 2024</span>
+                  <span>
+                    Thành viên từ{" "}
+                    {new Date(user?.createdAt!).toLocaleDateString("vi-VN")}
+                  </span>
                 </div>
               </div>
             </CardContent>
@@ -138,17 +149,23 @@ export default function ProfilePage() {
             <CardContent className="space-y-4">
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Tổng số đơn hàng</span>
-                <span className="font-semibold">12</span>
+                <span className="font-semibold">
+                  {orders.reduce((acc, order) => acc + order.items.length, 0)}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Tổng tiền đã mua</span>
-                <span className="font-semibold">12.000.000 đ</span>
+                <span className="font-semibold">
+                  {formatPrice(
+                    orders.reduce((acc, order) => acc + order.total, 0)
+                  )}
+                </span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">
                   Số lượng sản phẩm yêu thích
                 </span>
-                <span className="font-semibold">5</span>
+                <span className="font-semibold">3</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Điểm thưởng</span>
@@ -181,7 +198,7 @@ export default function ProfilePage() {
                           <FormItem>
                             <FormLabel>Họ</FormLabel>
                             <FormControl>
-                              <Input placeholder="John" {...field} />
+                              <Input placeholder="Nguyễn" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -194,7 +211,7 @@ export default function ProfilePage() {
                           <FormItem>
                             <FormLabel>Tên</FormLabel>
                             <FormControl>
-                              <Input placeholder="Doe" {...field} />
+                              <Input placeholder="Văn A" {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -213,6 +230,7 @@ export default function ProfilePage() {
                               <Input
                                 type="email"
                                 placeholder="nguyenvan@example.com"
+                                disabled
                                 {...field}
                               />
                             </FormControl>
@@ -305,19 +323,6 @@ export default function ProfilePage() {
                           </FormItem>
                         )}
                       />
-                      {/* <FormField
-                        control={form.control}
-                        name="zipCode"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>ZIP Code</FormLabel>
-                            <FormControl>
-                              <Input placeholder="10001" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      /> */}
                     </div>
                   </div>
 

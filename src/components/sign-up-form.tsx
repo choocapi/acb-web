@@ -5,16 +5,17 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useState } from "react";
-import { useAuth } from "@/lib/auth-context";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useAppDispatch } from "@/lib/hook";
+import { signUp } from "@/lib/features/auth/authThunks";
 
 export function SignUpForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
   const router = useRouter();
-  const { register } = useAuth();
+  const dispatch = useAppDispatch();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -30,7 +31,9 @@ export function SignUpForm({
       toast.error("Mật khẩu và mật khẩu xác nhận không khớp");
       return;
     }
-    const res = await register(fullName, email, phone, password);
+    const res = await dispatch(
+      signUp({ fullName, email, phone, password })
+    ).unwrap();
     if (res.success) {
       toast.success(res.message);
       router.push("/login");
@@ -115,14 +118,6 @@ export function SignUpForm({
         </div>
         <Button type="submit" className="w-full">
           Đăng ký
-        </Button>
-        <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
-          <span className="bg-background text-muted-foreground relative z-10 px-2">
-            Hoặc tiếp tục với
-          </span>
-        </div>
-        <Button variant="outline" className="w-full">
-          Đăng ký bằng Google
         </Button>
       </div>
       <div className="text-center text-sm">

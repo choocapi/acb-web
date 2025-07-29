@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAppSelector } from "@/lib/hook";
 import { formatPrice } from "@/lib/utils";
 import { ArrowLeft, Heart, ShoppingCart, Trash2 } from "lucide-react";
 import Image from "next/image";
@@ -11,42 +12,43 @@ import { toast } from "sonner";
 // Mock wishlist data
 const mockWishlistItems = [
   {
-    id: 1,
-    title: "Tai nghe Premium Wireless",
-    price: 2000000,
-    originalPrice: 2500000,
+    id: "UPB5fcmm24pKqt6KqhUt",
+    title: "Laptop gaming ASUS ROG Strix SCAR 16 G635LX RW192W",
+    price: 105000000,
+    originalPrice: 118000000,
     image:
-      "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop",
+      "https://firebasestorage.googleapis.com/v0/b/ecommerce-store-6d7b7.firebasestorage.app/o/products%2Fscar_new_16_l.png?alt=media&token=34fafd1c-d755-4785-b939-bd2016e64fa9",
     inStock: true,
-    category: "Electronics",
-    addedDate: "2025-01-05",
+    category: "Laptop",
+    addedDate: "2025-07-28",
   },
   {
-    id: 2,
-    title: "Ghế văn phòng Ergonomic",
-    price: 299000,
-    originalPrice: 349000,
+    id: "mOQVuH5Y8aXzdjh7vptl",
+    title:
+      'Màn hình Asus TUF GAMING VG259Q3A 25" Fast IPS 180Hz Gsync chuyên game',
+    price: 2990000,
+    originalPrice: 3090000,
     image:
-      "https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=500&h=500&fit=crop",
+      "https://firebasestorage.googleapis.com/v0/b/ecommerce-store-6d7b7.firebasestorage.app/o/products%2Fasus_vg259q3a.jpg?alt=media&token=cc2815a9-d84d-48c1-9a21-95fa5d558645",
     inStock: true,
-    category: "Furniture",
-    addedDate: "2025-01-03",
+    category: "Màn hình",
+    addedDate: "2025-07-28",
   },
   {
-    id: 3,
-    title: "Đồng hồ thông minh",
-    price: 199000,
-    originalPrice: 249000,
+    id: "nk3zBSBAuqIj2yojvpi9",
+    title: "Camera WIFI UNV IPC-S3E-M3 (3MP - Quay quét - Đàm thoại 2 chiều)",
+    price: 165000,
+    originalPrice: 190000,
     image:
-      "https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&h=500&fit=crop",
+      "https://firebasestorage.googleapis.com/v0/b/ecommerce-store-6d7b7.firebasestorage.app/o/products%2Funv_ipc_s3e_m3.png?alt=media&token=8810b8fa-864a-4053-90b1-ca30effafc12",
     inStock: false,
-    category: "Electronics",
-    addedDate: "2025-01-01",
+    category: "Camera",
+    addedDate: "2025-07-28",
   },
 ];
 
 export default function WishlistPage() {
-  const handleRemoveFromWishlist = (id: number, title: string) => {
+  const handleRemoveFromWishlist = (id: string, title: string) => {
     toast.success(`${title} đã được xóa khỏi danh sách yêu thích`);
   };
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useAuth } from "@/lib/auth-context";
+import { useAppSelector } from "@/lib/hook";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
@@ -9,7 +9,8 @@ interface AuthGuardProps {
 }
 
 export default function AuthGuard({ children }: AuthGuardProps) {
-  const { isAdmin, user } = useAuth();
+  const user = useAppSelector((state) => state.auth.user);
+  const isAdmin = user?.role === "admin";
   const router = useRouter();
 
   useEffect(() => {
